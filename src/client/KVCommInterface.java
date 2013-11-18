@@ -1,6 +1,8 @@
 package client;
 
+import CustomExceptions.ServerConnectionException;
 import common.messages.KVMessage;
+import java.io.IOException;
 
 public interface KVCommInterface {
 
@@ -42,4 +44,6 @@ public interface KVCommInterface {
 	 *             KV server).
 	 */
 	public KVMessage get(String key) throws Exception;
+        
+        public String SendRecvMessage(String strMessage) throws IOException, ServerConnectionException;
 }

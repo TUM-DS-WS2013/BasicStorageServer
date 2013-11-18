@@ -14,7 +14,7 @@ import org.apache.log4j.PatternLayout;
 public class LogSetup {
 
 	public static final String UNKNOWN_LEVEL = "UnknownLevel";
-	private static Logger logger = Logger.getRootLogger();
+	private Logger logger = Logger.getRootLogger();
 	private String logdir;
 	
 	/**
@@ -41,7 +41,7 @@ public class LogSetup {
 		logger.setLevel(level);
 	}
 	
-	public static boolean isValidLevel(String levelString) {
+	public boolean isValidLevel(String levelString) {
 		boolean valid = false;
 		
 		if(levelString.equals(Level.ALL.toString())) {
@@ -63,7 +63,61 @@ public class LogSetup {
 		return valid;
 	}
 	
-	public static String getPossibleLogLevels() {
+        //<editor-fold defaultstate="collapsed" desc="log4j.Logger call wrappers">
+        public void debug(Object message) {
+            logger.debug(message);
+        }
+        public void info(Object message) {
+            logger.info(message);
+        }
+        public void warn(Object message) {
+            logger.warn(message);
+        }
+        public void error(Object message) {
+            logger.error(message);
+        }
+        public void fatal(Object message) {
+            logger.fatal(message);
+        }
+    //</editor-fold>
+    
+        /**
+        * Changes logging level
+        * @param levelString New logging level name.
+        * @return Info string
+        */
+       public String setLogLevel(String levelString) {
+           String resultString = null;
+           Level level = null;
+
+           if (levelString.equalsIgnoreCase("all")) {
+               level = Level.ALL;
+           } else if (levelString.equalsIgnoreCase("debug")) {
+               level = Level.DEBUG;
+           } else if (levelString.equalsIgnoreCase("info")) {
+               level = Level.INFO;
+           } else if (levelString.equalsIgnoreCase("warn")) {
+               level = Level.WARN;
+           } else if (levelString.equalsIgnoreCase("error")) {
+               level = Level.ERROR;
+           } else if (levelString.equalsIgnoreCase("fatal")) {
+               level = Level.FATAL;
+           } else if (levelString.equalsIgnoreCase("off")) {
+               level = Level.OFF;
+           } else {
+               resultString = "Error! Logging level \"" + levelString 
+                       + "\" is n ot valid.";
+           }
+
+           if (level != null) {
+               logger.setLevel(level);
+               resultString = "Logging level changed to \"" + levelString + "\".";
+           }
+
+           return resultString;
+       }
+
+	public String getPossibleLogLevels() {
 		return "ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF";
 	}
 }
