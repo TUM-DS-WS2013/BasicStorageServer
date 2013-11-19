@@ -6,7 +6,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- *
+ * Class responsible for storing the key-value data.
  * @author Danila Klimenko
  */
 public class KVDataStorage {
@@ -18,6 +18,9 @@ public class KVDataStorage {
     private final Lock                      read_lock;
     private final Lock                      write_lock;
     
+    /**
+     * Main parameterless constructor.
+     */
     public KVDataStorage() {
         this.storage = new HashMap<String, String>();
         this.rw_lock = new ReentrantReadWriteLock();
@@ -25,6 +28,14 @@ public class KVDataStorage {
         this.write_lock = this.rw_lock.writeLock();
     }
     
+    /**
+     * Method implementing the 'put' command.
+     * @param key The key
+     * @param value The value to be associated with the key
+     * @return The previous value associated with the given key, or null, if the
+     *          key was not present in the key-value storage.
+     * @throws IllegalArgumentException Thrown if key or value are illegal
+     */
     public String put(String key, String value) throws IllegalArgumentException {
         // Verify arguments
         if (key == null || key.length() > MAX_KEY_LENGTH) {
@@ -47,6 +58,12 @@ public class KVDataStorage {
         return prev_value;
     }
     
+    /**
+     * Method implementing the 'get' command.
+     * @param key The key to look for
+     * @return The value associated with the given key, or null, if the key was
+     *          not present in the key-value storage.
+     */
     public String get(String key) {
         if (key == null || key.length() > MAX_KEY_LENGTH) {
             return null;
@@ -64,6 +81,12 @@ public class KVDataStorage {
         return value;
     }
     
+    /**
+     * Method implementing the 'get' command.
+     * @param key The key to look for
+     * @return The value previously associated with the given key, or null, if
+     *          the key was not present in the key-value storage.
+     */
     public String delete(String key) {
         if (key == null || key.length() > MAX_KEY_LENGTH) {
             return null;
@@ -81,6 +104,10 @@ public class KVDataStorage {
         return deleted_value;
     }
     
+    /**
+     * Returns the dump of all the contents of the key-value storage.
+     * @return A string containing all stored key-value data
+     */
     public String dump() {
         return storage.toString();
     }

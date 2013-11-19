@@ -7,7 +7,7 @@ package app_kvClient;
  */
 public final class InputParser {
     /**
-     * Maximum allowed length of the input
+     * Maximal allowed length of the input
      */
     private static final int            MAX_INPUT_LENGTH = 128 * 1024 - 1; // 128 KB
     /**
@@ -134,6 +134,12 @@ public final class InputParser {
         return tokens;
     }
     
+    /**
+     * Checks whether the provided key and value are too long
+     * @param key The key string
+     * @param value The value string
+     * @return True if key and value are of acceptable length
+     */
     private static Boolean verifyKeyValue(String key, String value) {
         final int MAX_KEY_LENGTH = 20;
         final int MAX_VAL_LENGTH = 120 * 1024;
@@ -183,7 +189,7 @@ public final class InputParser {
         public int optArgCount;
         public boolean greedyLastArg;
 
-        // Pack of constructors with different argument sets
+        // Pack of constructors with reduced argument sets
         ValidCommand(String name, String helpText) {
             this(name, helpText, 0, 0, false);
         }
