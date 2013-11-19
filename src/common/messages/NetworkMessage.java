@@ -7,7 +7,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 /**
- *
+ * Special class representing low-level message format for client-server interaction
  * @author Danila Klimenko
  */
 public class NetworkMessage {
@@ -17,6 +17,11 @@ public class NetworkMessage {
     private final int       length;
     private final byte[]    data;
     
+    /**
+     * Main constructor from a byte array.
+     * @param data Array of bytes to be sent
+     * @throws IOException Thrown if data size exceeds the limit
+     */
     public NetworkMessage(byte[] data) throws IOException {
         if (data.length > MAX_MESSAGE_SIZE) {
             throw new IOException("Message size limit exceeded.");
@@ -26,10 +31,19 @@ public class NetworkMessage {
         this.length = data.length;
     }
     
+    /**
+     * Getter method for the contents of the message
+     * @return Message contents as an array of bytes
+     */
     public byte[] getData() {
         return this.data;
     }
     
+    /**
+     * Write the message to the given OutputStream.
+     * @param os Output stream to write the message to
+     * @throws IOException Thrown if OutputStream malfunctions
+     */
     public void writeTo(OutputStream os) throws IOException {
         ByteBuffer bbuf = ByteBuffer.allocate(SIZEOF_LENGTH + this.length);
         
@@ -39,6 +53,12 @@ public class NetworkMessage {
         os.write(bbuf.array());
     }
     
+    /**
+     * Static method reading a message from the given InputStream.
+     * @param is Input stream to read the message from
+     * @return A valid NetworkMessage instance
+     * @throws IOException Thrown if InputStream malfunctions
+     */
     public static NetworkMessage readFrom(InputStream is) throws IOException {
         DataInputStream dis = new DataInputStream(is);
         
