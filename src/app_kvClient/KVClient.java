@@ -5,6 +5,7 @@ import client.KVStore;
 import logger.LogSetup;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
+import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
 import CustomExceptions.ServerConnectionException;
 import common.messages.KVMessage;
@@ -14,12 +15,12 @@ import java.net.UnknownHostException;
 public class KVClient {
     
     private KVCommInterface objKVStoreClient;
-    private final LogSetup logger;
+    private final Logger logger;
     
     public KVClient() throws IOException
     {
         objKVStoreClient = null;
-        logger = new LogSetup("c:\\", Level.DEBUG);
+        logger = LogSetup.getLogger();
     }
     
     /**
@@ -27,6 +28,12 @@ public class KVClient {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        try {
+            LogSetup.initialize("logs/client/client.log", Level.DEBUG);
+        } catch (IOException e) {
+            System.out.println("Error! Unable to initialize logger: " + e.getMessage());
+            System.exit(1);
+        }
         
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         String userInput;
@@ -80,7 +87,7 @@ public class KVClient {
             }
             else if (inputMessage[0].compareToIgnoreCase("logLevel") == 0)
             {
-                output = logger.setLogLevel(inputMessage[1]);
+                output = LogSetup.setLogLevel(inputMessage[1]);
             }
             else if (inputMessage[0].compareToIgnoreCase("quit") == 0)
             {

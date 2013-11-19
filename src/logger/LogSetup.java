@@ -1,5 +1,6 @@
 package logger;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.log4j.ConsoleAppender;
@@ -13,111 +14,70 @@ import org.apache.log4j.PatternLayout;
  */
 public class LogSetup {
 
-	public static final String UNKNOWN_LEVEL = "UnknownLevel";
-	private Logger logger = Logger.getRootLogger();
-	private String logdir;
-	
-	/**
-	 * Initializes the logging for the echo server. Logs are appended to the 
-	 * console output and written into a separated server log file at a given 
-	 * destination.
-	 * 
-	 * @param logdir the destination (i.e. directory + filename) for the 
-	 * 		persistent logging information.
-	 * @throws IOException if the log destination could not be found.
-	 */
-	public LogSetup(String logdir, Level level) throws IOException {
-		this.logdir = logdir;
-		initialize(level);
-	}
+    private static final Logger logger = Logger.getRootLogger();
+    private static boolean      initialized = false;
+    private static String       log_path;
 
-	private void initialize(Level level) throws IOException {
-		PatternLayout layout = new PatternLayout( "%d{ISO8601} %-5p [%t] %c: %m%n" );
-		FileAppender fileAppender = new FileAppender( layout, logdir, true );		
-	    
-	    ConsoleAppender consoleAppender = new ConsoleAppender(layout);
-		logger.addAppender(consoleAppender);
-		logger.addAppender(fileAppender);
-		logger.setLevel(level);
-	}
-	
-	public boolean isValidLevel(String levelString) {
-		boolean valid = false;
-		
-		if(levelString.equals(Level.ALL.toString())) {
-			valid = true;
-		} else if(levelString.equals(Level.DEBUG.toString())) {
-			valid = true;
-		} else if(levelString.equals(Level.INFO.toString())) {
-			valid = true;
-		} else if(levelString.equals(Level.WARN.toString())) {
-			valid = true;
-		} else if(levelString.equals(Level.ERROR.toString())) {
-			valid = true;
-		} else if(levelString.equals(Level.FATAL.toString())) {
-			valid = true;
-		} else if(levelString.equals(Level.OFF.toString())) {
-			valid = true;
-		}
-		
-		return valid;
-	}
-	
-        //<editor-fold defaultstate="collapsed" desc="log4j.Logger call wrappers">
-        public void debug(Object message) {
-            logger.debug(message);
+    private LogSetup() {}
+
+    public static void initialize(String logdir, Level level) throws IOException {
+        if (initialized) {
+            return;
         }
-        public void info(Object message) {
-            logger.info(message);
-        }
-        public void warn(Object message) {
-            logger.warn(message);
-        }
-        public void error(Object message) {
-            logger.error(message);
-        }
-        public void fatal(Object message) {
-            logger.fatal(message);
-        }
-    //</editor-fold>
+        
+        log_path = logdir;
+        
+        // Make sure the directories exist
+        File file = new File(log_path);
+        file.getParentFile().mkdirs();
+        
+        PatternLayout layout = new PatternLayout("%d{ISO8601} %-5p [%t] %c: %m%n");
+        FileAppender fileAppender = new FileAppender(layout, logdir, true);
+
+        ConsoleAppender consoleAppender = new ConsoleAppender(layout);
+        logger.addAppender(consoleAppender);
+        logger.addAppender(fileAppender);
+        logger.setLevel(level);
+        
+        initialized = true;
+    }
     
-        /**
-        * Changes logging level
-        * @param levelString New logging level name.
-        * @return Info string
-        */
-       public String setLogLevel(String levelString) {
-           String resultString = null;
-           Level level = null;
+    public static Logger getLogger() {
+        return logger;
+    }
 
-           if (levelString.equalsIgnoreCase("all")) {
-               level = Level.ALL;
-           } else if (levelString.equalsIgnoreCase("debug")) {
-               level = Level.DEBUG;
-           } else if (levelString.equalsIgnoreCase("info")) {
-               level = Level.INFO;
-           } else if (levelString.equalsIgnoreCase("warn")) {
-               level = Level.WARN;
-           } else if (levelString.equalsIgnoreCase("error")) {
-               level = Level.ERROR;
-           } else if (levelString.equalsIgnoreCase("fatal")) {
-               level = Level.FATAL;
-           } else if (levelString.equalsIgnoreCase("off")) {
-               level = Level.OFF;
-           } else {
-               resultString = "Error! Logging level \"" + levelString 
-                       + "\" is n ot valid.";
-           }
+    /**
+     * Changes logging level
+     *
+     * @param levelString New logging level name.
+     * @return Info string
+     */
+    public static String setLogLevel(String levelString) {
+        String  report;
+        
+        if (isValidLevel(levelString)) {
+            logger.setLevel(Level.toLevel(levelString));
+            report = "Logging level changed to \"" + levelString + "\".";
+        } else {
+            report = "Error! Logging level \"" + levelString + "\" is not valid.";
+        }
 
-           if (level != null) {
-               logger.setLevel(level);
-               resultString = "Logging level changed to \"" + levelString + "\".";
-           }
+        return report;
+    }
+    
+    public static boolean isValidLevel(String levelString) {
+        boolean valid = false;
 
-           return resultString;
-       }
+        if (levelString.equalsIgnoreCase(Level.ALL.toString()) ||
+                levelString.equalsIgnoreCase(Level.DEBUG.toString()) ||
+                levelString.equalsIgnoreCase(Level.INFO.toString()) ||
+                levelString.equalsIgnoreCase(Level.WARN.toString()) ||
+                levelString.equalsIgnoreCase(Level.ERROR.toString()) ||
+                levelString.equalsIgnoreCase(Level.FATAL.toString()) ||
+                levelString.equalsIgnoreCase(Level.OFF.toString())) {
+            valid = true;
+        }
 
-	public String getPossibleLogLevels() {
-		return "ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF";
-	}
+        return valid;
+    }
 }

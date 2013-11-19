@@ -1,5 +1,9 @@
 nbproject
 
 *.class
+*.log
 
 # Package Files #
+bin
+ms2-*.jar
+*.MF
