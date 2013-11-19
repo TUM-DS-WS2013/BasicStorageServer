@@ -3,7 +3,7 @@ package app_kvClient;
 /**
  * Custom user input parser. Supports input verification, command syntax 
  * checking, command arguments parsing and help text management.
- * @author klem
+ * @author Danila Klimenko
  */
 public final class InputParser {
     /**
