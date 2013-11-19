@@ -20,18 +20,16 @@ public final class InputParser {
                 2),
         new ValidCommand("disconnect",
                 "disconnect                 - Disconnect from the echo server"),
-        new ValidCommand("send",
-                "send <message>             - Send the specified <message> to "
-                        + "the echo server.",
-                1, 0, true),
         new ValidCommand("logLevel",
                 "logLevel <level>           - Change logging level to <level>.",
                 1),
         new ValidCommand("put",
-                "put <key> <value>          - Change logging level to <level>.",
+                "put <key> <value>          - Send a 'put' request to the server "
+                        + "with the provided 'key', 'value' pair.",
                 1, 1),
-        new ValidCommand("logLevel",
-                "get <key>                  - Change logging level to <level>.",
+        new ValidCommand("get",
+                "get <key>                  - Send a 'get' request to the server "
+                        + "with the provided 'key'.",
                 1),
         new ValidCommand("help",
                 "help [command]             - Print general help text or help "
