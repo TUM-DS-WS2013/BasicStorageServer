@@ -53,7 +53,14 @@ public class ClientConnection implements Runnable {
                         kvmsg = KVMessageRaw.unmarshal(netmsg.getData());
                         
                         // Process query
+                        logger.info("Received a '" + kvmsg.getStatus().name() + "' request from '" +
+                                    client_socket.getInetAddress() + "' with {key='" + kvmsg.getKey() +
+                                    "'; value='" + kvmsg.getValue() + "'}.");
+                        
                         kvmsg_reply = this.parseKVMessage(kvmsg);
+                        
+                        logger.info("Replying with '" + kvmsg_reply.getStatus().name() + "': {key='" +
+                                    kvmsg_reply.getKey() + "'; value='" + kvmsg_reply.getValue() + "'}.");
                         
                     } catch (ParseException e) {
                         String report = "Warning! Received KVMessage is invalid: " + e.getMessage();

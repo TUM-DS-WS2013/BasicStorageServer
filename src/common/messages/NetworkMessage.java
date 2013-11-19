@@ -19,7 +19,7 @@ public class NetworkMessage {
     
     public NetworkMessage(byte[] data) throws IOException {
         if (data.length > MAX_MESSAGE_SIZE) {
-            throw new IOException("Error! Message size limit exceeded.");
+            throw new IOException("Message size limit exceeded.");
         }
         
         this.data = data;
@@ -44,14 +44,14 @@ public class NetworkMessage {
         
         int length = dis.readInt();
         if (length > MAX_MESSAGE_SIZE) {
-            throw new IOException("Error! Message size limit exceeded.");
+            throw new IOException("Message size limit exceeded.");
         }
         
         byte[] data = new byte[length];
         
         int read_bytes = dis.read(data);
         if (read_bytes != length) {
-            throw new IOException("Error! Message is incomplete: expected length = " +
+            throw new IOException("Message is incomplete: expected length = " +
                                     length + "; available = " + read_bytes + ".");
         }
         

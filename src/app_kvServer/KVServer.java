@@ -1,6 +1,8 @@
 package app_kvServer;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import logger.LogSetup;
@@ -13,7 +15,7 @@ public class KVServer implements Runnable {
     
     private final KVDataStorage data_storage;
     private final ServerSocket  server_socket;
-    private boolean             online;
+    private volatile boolean    online;
     
     public KVServer(int port) throws IOException {
         this.port = port;
@@ -49,7 +51,7 @@ public class KVServer implements Runnable {
         
         // Parse command line arguments
         boolean print_usage = false;
-        Level   log_level = Level.INFO;
+        Level   log_level = Level.WARN;
         int     port = -1;
         
         for (int i = 0; i < args.length; ++i) {
@@ -79,7 +81,7 @@ public class KVServer implements Runnable {
         }
         if (print_usage) {
             System.out.println("Usage: KVServer [-l log_level] <port>");
-            System.out.println("    -l log_level    - Set logging level (default: INFO).");
+            System.out.println("    -l log_level    - Set logging level (default: WARN).");
             System.out.println("    port            - Port number for listening for connections.");
             System.exit(1);
         }
@@ -94,8 +96,21 @@ public class KVServer implements Runnable {
         
         // Start server
         try {
-            Runnable server = new KVServer(port);
+            KVServer server = new KVServer(port);
             new Thread(server).start();
+            
+            BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+            while (server.online) {
+                String user_query = in.readLine();
+                
+                if (user_query.equalsIgnoreCase("quit")) {
+                    server.online = false;
+                    System.exit(1);
+                } else if (user_query.equalsIgnoreCase("dump")) {
+                    System.out.println(server.data_storage.dump());
+                }
+            }
+            
         } catch (IOException e) {
             logger.error("Error! Cannot start server: " + e.getMessage());
         }

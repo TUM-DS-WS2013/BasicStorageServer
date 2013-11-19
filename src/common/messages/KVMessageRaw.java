@@ -89,7 +89,7 @@ public class KVMessageRaw implements KVMessage {
         StatusType stype = null;
         
         if (bbuf.remaining() < SIZEOF_STATUSTYPE) {
-            throw new ParseException("Error! Message is empty.", 0);
+            throw new ParseException("Message is empty.", 0);
         }
         
         byte type_data = bbuf.get();
@@ -101,7 +101,7 @@ public class KVMessageRaw implements KVMessage {
         }
         
         if (stype == null) {
-            throw new ParseException("Error! Invalid message type.", bbuf.position() - 1);
+            throw new ParseException("Invalid message type.", bbuf.position() - 1);
         }
         
         return stype;
@@ -111,14 +111,14 @@ public class KVMessageRaw implements KVMessage {
         String str = null;
         
         if (bbuf.remaining() < SIZEOF_INT) {
-            throw new ParseException("Error! String length is invalid.", bbuf.position());
+            throw new ParseException("String length is invalid.", bbuf.position());
         }
         
         int len = bbuf.getInt();
         
         if (len > 0) {
             if (bbuf.remaining() < len) {
-                throw new ParseException("Error! String id incomplete: expected length: " + len +
+                throw new ParseException("String id incomplete: expected length: " + len +
                         "; available: " + bbuf.remaining() + ".", bbuf.position());
             }
             

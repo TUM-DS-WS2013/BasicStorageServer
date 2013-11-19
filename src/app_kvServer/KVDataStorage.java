@@ -28,10 +28,10 @@ public class KVDataStorage {
     public String put(String key, String value) throws IllegalArgumentException {
         // Verify arguments
         if (key == null || key.length() > MAX_KEY_LENGTH) {
-            throw new IllegalArgumentException("Error! Illegal key: '" + key + "'.");
+            throw new IllegalArgumentException("Illegal key: '" + key + "'.");
         }
         if (value == null || value.length() > MAX_VALUE_LENGTH) {
-            throw new IllegalArgumentException("Error! Illegal value: '" + key + "'.");
+            throw new IllegalArgumentException("Illegal value: '" + key + "'.");
         }
         
         // Put (key,value) pair into storage
@@ -79,5 +79,9 @@ public class KVDataStorage {
         }
         
         return deleted_value;
+    }
+    
+    public String dump() {
+        return storage.toString();
     }
 }
