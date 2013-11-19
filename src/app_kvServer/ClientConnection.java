@@ -13,34 +13,24 @@ import logger.LogSetup;
 import org.apache.log4j.Logger;
 
 /**
- * A runnable class responsible for interaction with a single client
+ *
  * @author Danila KLimenko
  */
 public class ClientConnection implements Runnable {
     private static final Logger logger = LogSetup.getLogger();
     
     private final Socket        client_socket;
-    private final KVServer      master;
-    private volatile boolean    online;
+    private final KVDataStorage data_storage;
+    private boolean             online;
     private InputStream         input;
     private OutputStream        output;
 
-    /**
-     * Main constructor.
-     * @param clientSocket An open socket for interaction with client
-     * @param master The server instance that created this connection
-     */
-    public ClientConnection(Socket clientSocket, KVServer master) {
+    public ClientConnection(Socket clientSocket, KVDataStorage data_storage) {
         this.client_socket = clientSocket;
-        this.master = master;
+        this.data_storage = data_storage;
         this.online = true;
-        this.input = null;
-        this.output = null;
     }
     
-    /**
-     * Override for run() method from Runnable interface
-     */
     @Override
     public void run() {
         try {
@@ -90,46 +80,22 @@ public class ClientConnection implements Runnable {
             }
 
         } catch (IOException e) {
-            logger.error("Error! Connection could not be established: " + e.getMessage());
+            logger.error("Error! Connection could not be established!", e);
 
         } finally {
 
-            this.closeConnection();
-            
-            this.master.clientTerminated(this);
+            try {
+                if (client_socket != null) {
+                    input.close();
+                    output.close();
+                    client_socket.close();
+                }
+            } catch (IOException e) {
+                logger.error("Error! Unable to tear down connection!", e);
+            }
         }
     }
     
-    /**
-     * Closes connection and frees all associated resources.
-     */
-    public void closeConnection() {
-        this.online = false;
-        
-        try {
-            if (this.input != null) {
-                this.input.close();
-                this.input = null;
-            }
-            if (this.output != null) {
-                this.output.close();
-                this.output = null;
-            }
-            if (!this.client_socket.isClosed()) {
-                this.client_socket.close();
-            }
-        } catch (IOException e) {
-            logger.error("Error! Unable to tear down connection: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Parses the query received from client, updates or requests data from the
-     * key-value data storage, and generates a reply-message.
-     * @param kvmsg Client's query in a form of KVMessage
-     * @return KVMessage representing the reply for the client
-     * @throws ParseException Thrown if client's query contains illegal data
-     */
     private KVMessage parseKVMessage(KVMessage kvmsg) throws ParseException {
         StatusType  type = kvmsg.getStatus();
         String      key = kvmsg.getKey();
@@ -142,7 +108,7 @@ public class ClientConnection implements Runnable {
             case PUT:
                 if (value != null) { // Performing put operation
                     try {
-                        return_value = this.master.getDataStorage().put(key, value);
+                        return_value = this.data_storage.put(key, value);
                         return_type = (return_value == null) ?
                                         StatusType.PUT_SUCCESS : StatusType.PUT_UPDATE;
                         return_value = value; // Return the value form the client query
@@ -153,7 +119,7 @@ public class ClientConnection implements Runnable {
                     }
                     
                 } else { // Performing delete operation
-                    return_value = this.master.getDataStorage().delete(key);
+                    return_value = this.data_storage.delete(key);
                     if (return_value == null) {
                         return_type = StatusType.DELETE_ERROR;
                         return_value = "Requested key is not found or invalid.";
@@ -164,7 +130,7 @@ public class ClientConnection implements Runnable {
                 break;
                 
             case GET:
-                return_value = this.master.getDataStorage().get(key);
+                return_value = this.data_storage.get(key);
                 if (return_value == null) {
                     return_type = StatusType.GET_ERROR;
                     return_value = "Requested key is not found or invalid.";

@@ -18,17 +18,8 @@ public class LogSetup {
     private static boolean      initialized = false;
     private static String       log_path;
 
-    /**
-     * Private constructor restricts instantiation of the class
-     */
     private LogSetup() {}
 
-    /**
-     * Initializes the "rootLogger" for further use in other classes
-     * @param logdir Path to log file
-     * @param level Initial logging level
-     * @throws IOException Thrown if log file cannot be opened.
-     */
     public static void initialize(String logdir, Level level) throws IOException {
         if (initialized) {
             return;
@@ -51,17 +42,14 @@ public class LogSetup {
         initialized = true;
     }
     
-    /**
-     * Returns the logger object which is directly used to log information
-     * @return The logger object
-     */
     public static Logger getLogger() {
         return logger;
     }
 
     /**
      * Changes logging level
-     * @param levelString New logging level name as a string.
+     *
+     * @param levelString New logging level name.
      * @return Info string
      */
     public static String setLogLevel(String levelString) {
@@ -77,11 +65,6 @@ public class LogSetup {
         return report;
     }
     
-    /**
-     * Verifies whether the provided string is a valid name of a logging level
-     * @param levelString Level name as a string
-     * @return True if levelString is a valid logging level
-     */
     public static boolean isValidLevel(String levelString) {
         boolean valid = false;
 

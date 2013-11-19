@@ -11,59 +11,39 @@ public class KVMessageRaw implements KVMessage {
     StatusType  type;
     String      key;
     String      value;
+//    byte[]      data;
     
-    /**
-     * Main constructor for the class. Used for a known key-value pair.
-     * @param type Message type
-     * @param key The key
-     * @param value The value
-     */
     public KVMessageRaw(StatusType type, String key, String value) {
         this.type = type;
         this.key = key;
         this.value = value;
     }
+    
+//    public KVMessageRaw(byte[] data) throws ParseException {
+//        this.type = null;
+//        this.key = null;
+//        this.value = null;
+//    }
 
-    /**
-     * Getter method for the key.
-     * @return The key
-     */
     @Override
     public String getKey() {
         return this.key;
     }
 
-    /**
-     * Getter method for the value.
-     * @return The value
-     */
     @Override
     public String getValue() {
         return this.value;
     }
 
-    /**
-     * Getter method for the message type.
-     * @return The type of the message
-     */
     @Override
     public StatusType getStatus() {
         return this.type;
     }
     
-    /**
-     * The following are the static methods for marshaling and un-marshaling of
-     * the KVMessages, respectively, to and from byte arrays.
-     */
     //<editor-fold defaultstate="collapsed" desc="Marshalling routines">
     private static final int SIZEOF_STATUSTYPE = 1;
     private static final int SIZEOF_INT = 4;
     
-    /**
-     * Converts KVMessage to an array of bytes.
-     * @param kvmsg The message to be converted
-     * @return Byte array representation of the message
-     */
     public static byte[] marshal(KVMessage kvmsg) {
         int     size = SIZEOF_STATUSTYPE;
         String  key = kvmsg.getKey();
@@ -81,13 +61,6 @@ public class KVMessageRaw implements KVMessage {
         return bbuf.array();
     }
     
-    /**
-     * Parses a KVMessage from a byte array
-     * @param data Byte array containing the message
-     * @return The parsed KVMessage
-     * @throws ParseException Thrown if the given byte array does not represent
-     *          a valid KVMessage.
-     */
     public static KVMessage unmarshal(byte[] data) throws ParseException {
         ByteBuffer  bbuf = ByteBuffer.wrap(data);
         
