@@ -5,8 +5,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.ParseException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import logger.LogSetup;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
@@ -114,44 +119,47 @@ public class KVServer implements Runnable {
      * @param args Array of command line arguments
      */
     public static void main(String[] args) {
+        Level   log_level = Level.WARN;
+        Integer port = null;
         
         // Parse command line arguments
-        boolean print_usage = false;
-        Level   log_level = Level.WARN;
-        int     port = -1;
-        
-        for (int i = 0; i < args.length; ++i) {
-            String opt = args[i];
+        try {
+            ArgumentParser parser = new ArgumentParser("hl:", args);
+            ArgumentParser.Option option;
             
-            if (opt.startsWith("-")) {
-                if (opt.equalsIgnoreCase("-h")) {
-                    print_usage = true;
-                    break;
-                } else if (opt.startsWith("-l")) {
-                    String arg = (opt.length() > 2) ? opt.substring(2) :
-                                    ((i + 1) < args.length) ? args[++i] : null;
-                    
-                    if (arg != null && LogSetup.isValidLevel(arg)) {
-                        log_level = Level.toLevel(arg);
+            while ((option = parser.getNextArgument()) != null) {
+                if (option.name == null) { // Positional argument go here
+                    if (port == null) {
+                        try {
+                            port = Integer.parseInt(option.argument);
+                        } catch (NumberFormatException e) {}
+                        if (port == null || port < 0 || port > 65535) {
+                            throw new ParseException("Invalid port number: " + option.argument + ".", 0);
+                        }
                     } else {
-                        System.out.println("Error! Option -l requires a log level as an argument.");
-                        print_usage = true;
-                        break;
+                        throw new ParseException("Excess positional argument: " + option.argument + ".", 0);
+                    }
+                    
+                } else if (option.name.equals("h")) {
+                    printUsage();
+                    System.exit(1);
+                    
+                } else if (option.name.equals("l")) {
+                    if (LogSetup.isValidLevel(option.argument)) {
+                        log_level = Level.toLevel(option.argument);
+                    } else {
+                        throw new ParseException("Invalid logging level: " + option.argument + ".", 0);
                     }
                 }
-            } else {
-                port = Integer.parseInt(args[i]);
-                break;
             }
-        }
-        if (port == -1) {
-            System.out.println("Error! Port number is not provided.\n");
-            print_usage = true;
-        }
-        if (print_usage) {
-            System.out.println("Usage: KVServer [-l log_level] <port>");
-            System.out.println("    -l log_level    - Set logging level (default: WARN).");
-            System.out.println("    port            - Port number for listening for connections.");
+            
+            if (port == null) {
+                throw new ParseException("Port number is not provided.", 0);
+            }
+            
+        } catch (ParseException e) {
+            System.out.println("Error parsing command line arguments: " + e.getMessage());
+            printUsage();
             System.exit(1);
         }
         
@@ -168,9 +176,11 @@ public class KVServer implements Runnable {
             KVServer server = new KVServer(port);
             new Thread(server).start();
             
-            BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+            BufferedReader  input_reader = new BufferedReader(new InputStreamReader(System.in));
+            String          user_query;
             while (server.online) {
-                String user_query = in.readLine();
+                System.out.print("> ");
+                user_query = input_reader.readLine().trim();
                 
                 if (user_query.equalsIgnoreCase("quit")) {
                     server.shutDown();
@@ -181,6 +191,107 @@ public class KVServer implements Runnable {
             
         } catch (IOException e) {
             logger.error("Error! Cannot start server: " + e.getMessage());
+        }
+    }
+    
+    private static void printUsage() {
+        System.out.println(
+                  "Usage: KVServer [-l log_level] <port>\n"
+                + "    -l log_level    - Set logging level (default: WARN).\n"
+                + "    port            - Port number for listening for connections."
+        );
+    }
+    
+    private static class ArgumentParser {
+        private final String                format;
+        private final Map<String, Boolean>  optArgs;
+        private final String[]              args;
+        private final int                   count;
+        private int                         offset;
+        
+        public ArgumentParser(String format, String[] args) throws ParseException {
+            this.format = format;
+            this.optArgs = new HashMap<String, Boolean>();
+            this.args = args;
+            this.count = args.length;
+            this.offset = 0;
+            
+            this.parseFormat();
+        }
+        
+        private void parseFormat() throws ParseException {
+            Pattern syntax = Pattern.compile("([a-zA-Z0-9][:]?)*");
+            
+            if (!syntax.matcher(this.format).matches()) {
+                throw new ParseException("Illegal symbols in format string.", 0);
+            }
+            
+            int i = 0;
+            while (i < this.format.length()) {
+                String  opt = this.format.substring(i, i + 1);
+                Boolean hasArg = false;
+                
+                if ((++i < this.format.length()) && (this.format.charAt(i) == ':')) {
+                    hasArg = true;
+                    ++i;
+                }
+                
+                this.optArgs.put(opt, hasArg);
+            }
+        }
+        
+        public Option getNextArgument() throws ParseException {
+            if (offset >= count) {
+                return null;
+            }
+            
+            String  opt = this.args[offset];
+            String  optName;
+            String  optArgument;
+            
+            Pattern syntax = Pattern.compile("\\-([a-zA-Z0-9])([\\S]*)");
+            Matcher syntax_matcher = syntax.matcher(opt);
+            
+            if (syntax_matcher.matches()) {
+                optName = syntax_matcher.group(1);
+                optArgument = syntax_matcher.group(2);
+                if (optArgument.length() == 0) {
+                    optArgument = null;
+                }
+            } else {
+                optName = null;
+                optArgument = opt;
+            }
+            
+            if (optName != null) {
+                if (!this.optArgs.containsKey(optName)) {
+                    throw new ParseException("Option '" + optName + "' is not supported.", 0);
+                }
+                if (this.optArgs.get(optName) && (optArgument == null)) {
+                    if (++offset >= count) {
+                        throw new ParseException("Option '" + optName + "' must have an argument.", 0);
+                    }
+                    optArgument = this.args[offset];
+                }
+            }
+            
+            ++offset;
+            
+            return new Option(optName, optArgument);
+        }
+        
+        public void reset() {
+            this.offset = 0;
+        }
+        
+        private class Option {
+            public final String   name;
+            public final String argument;
+            
+            public Option(String name, String argument) {
+                this.name = name;
+                this.argument = argument;
+            }
         }
     }
 }
