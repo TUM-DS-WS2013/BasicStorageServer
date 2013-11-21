@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
-import CustomExceptions.ServerConnectionException;
 import common.messages.KVMessage;
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -69,8 +68,6 @@ public class KVClient {
         if (inputMessage.length < 1 || (objKVStoreClient == null && !inputMessage[0].equalsIgnoreCase("connect"))) {
             return output;
         }
-//        if (!(inputMessage[0].compareToIgnoreCase("connect") == 0 && objKVStoreClient == null))
-//            return output;
         try {
             if (inputMessage[0].compareToIgnoreCase("connect") == 0) {
                 objKVStoreClient = new KVStore(inputMessage[1], Integer.parseInt(inputMessage[2]));
@@ -79,8 +76,6 @@ public class KVClient {
             } else if (inputMessage[0].compareToIgnoreCase("disconnect") == 0) {
                 objKVStoreClient.disconnect();
                 output = "Connection terminated!";
-            } else if (inputMessage[0].compareToIgnoreCase("send") == 0) {
-                output = objKVStoreClient.SendRecvMessage(inputMessage[1]);
             } else if (inputMessage[0].compareToIgnoreCase("logLevel") == 0) {
                 output = LogSetup.setLogLevel(inputMessage[1]);
             } else if (inputMessage[0].compareToIgnoreCase("quit") == 0) {
@@ -95,10 +90,7 @@ public class KVClient {
             }
 
             logger.info(output);
-        } catch (ServerConnectionException serverNotConnectedEx) {
-            output = serverNotConnectedEx.GetErrorMsg();
-            logger.error(output);
-        } catch (UnknownHostException hostException) {
+        }catch (UnknownHostException hostException) {
             output = "Error! See the log file for details";
             logger.error(hostException.getMessage());
         } catch (IOException ioexception) {
