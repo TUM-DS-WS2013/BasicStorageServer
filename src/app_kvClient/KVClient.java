@@ -66,7 +66,7 @@ public class KVClient {
     public String ProcessMessages(String[] inputMessage) {
         String output = new String();
         if (inputMessage.length < 1 || (objKVStoreClient == null && !inputMessage[0].equalsIgnoreCase("connect"))) {
-            return output;
+            return output = "Error: Connection not established!";
         }
         try {
             if (inputMessage[0].compareToIgnoreCase("connect") == 0) {
@@ -75,11 +75,13 @@ public class KVClient {
                 output = "Connection Established!";
             } else if (inputMessage[0].compareToIgnoreCase("disconnect") == 0) {
                 objKVStoreClient.disconnect();
+                objKVStoreClient = null;
                 output = "Connection terminated!";
             } else if (inputMessage[0].compareToIgnoreCase("logLevel") == 0) {
                 output = LogSetup.setLogLevel(inputMessage[1]);
             } else if (inputMessage[0].compareToIgnoreCase("quit") == 0) {
                 objKVStoreClient.disconnect();
+                objKVStoreClient = null;
                 output = "Application exit!";
             } else if (inputMessage[0].compareToIgnoreCase("put") == 0) {
                 KVMessage message = objKVStoreClient.put(inputMessage[1], inputMessage.length > 2 ? inputMessage[2]: null);
