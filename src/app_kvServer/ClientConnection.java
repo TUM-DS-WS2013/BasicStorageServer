@@ -48,10 +48,10 @@ public class ClientConnection implements Runnable {
             input = client_socket.getInputStream();
 
             // Send connection acknowledgement
-            String conn_ack = "Connected to server '" + client_socket.getLocalAddress() +
-                            "' on port '" + client_socket.getLocalPort() + "'. You are '" +
-                            client_socket.getInetAddress() + "'.";
-            new NetworkMessage(conn_ack.getBytes()).writeTo(output);
+            //String conn_ack = "Connected to server '" + client_socket.getLocalAddress() +
+            //                "' on port '" + client_socket.getLocalPort() + "'. You are '" +
+            //                client_socket.getInetAddress() + "'.";
+            //new NetworkMessage(conn_ack.getBytes()).writeTo(output);
 
             while (this.online) {
                 try {
