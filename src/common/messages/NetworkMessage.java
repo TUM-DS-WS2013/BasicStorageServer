@@ -51,6 +51,7 @@ public class NetworkMessage {
         bbuf.put(this.data);
         
         os.write(bbuf.array());
+        os.flush();
     }
     
     /**
@@ -69,10 +70,22 @@ public class NetworkMessage {
         
         byte[] data = new byte[length];
         
-        int read_bytes = dis.read(data);
-        if (read_bytes != length) {
+        int read_bytes = 0;
+        int total_read_bytes = 0;
+        
+        while (total_read_bytes < length) {
+            read_bytes = dis.read(data, total_read_bytes, length - total_read_bytes);
+            
+            if (read_bytes > 0) {
+                total_read_bytes += read_bytes;
+            } else {
+                break;
+            }
+        }
+        
+        if (total_read_bytes != length) {
             throw new IOException("Message is incomplete: expected length = " +
-                                    length + "; available = " + read_bytes + ".");
+                                    length + "; available = " + total_read_bytes + ".");
         }
         
         return new NetworkMessage(data);
