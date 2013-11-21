@@ -186,7 +186,7 @@ public class KVServer implements Runnable {
                     server.shutDown();
                 } else if (user_query.equalsIgnoreCase("dump")) {
                     System.out.println(server.data_storage.dump());
-                } else {
+                } else if (!user_query.isEmpty()) {
                     System.out.println("Error! Invalid command: '" + user_query + "'. Supported commands: dump, quit.");
                 }
             }
