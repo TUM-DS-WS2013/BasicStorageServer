@@ -26,7 +26,7 @@ public final class InputParser {
         new ValidCommand("put",
                 "put <key> <value>          - Send a 'put' request to the server "
                         + "with the provided 'key', 'value' pair.",
-                1, 1),
+                1, 1, true),
         new ValidCommand("get",
                 "get <key>                  - Send a 'get' request to the server "
                         + "with the provided 'key'.",
