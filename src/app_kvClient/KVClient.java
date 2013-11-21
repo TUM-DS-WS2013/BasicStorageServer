@@ -28,7 +28,7 @@ public class KVClient {
      */
     public static void main(String[] args) {
         try {
-            LogSetup.initialize("logs/client/client.log", Level.DEBUG);
+            LogSetup.initialize("logs/client/client.log", Level.WARN);
         } catch (IOException e) {
             System.out.println("Error! Unable to initialize logger: " + e.getMessage());
             System.exit(1);
@@ -82,11 +82,21 @@ public class KVClient {
                 objKVStoreClient.disconnect();
                 output = "Application exit!";
             } else if (inputMessage[0].compareToIgnoreCase("put") == 0) {
-                KVMessage message = objKVStoreClient.put(inputMessage[1], inputMessage[2]);
-                output = "---";
+                KVMessage message = objKVStoreClient.put(inputMessage[1], inputMessage.length > 2 ? inputMessage[2]: null);
+                if (message.getStatus() == KVMessage.StatusType.DELETE_SUCCESS)
+                    output = "Deletion Succeeded: Value was '" + message.getValue() + "'.";
+                else if (message.getStatus() == KVMessage.StatusType.PUT_SUCCESS)
+                    output = "Value stored successfully. Value is '" + message.getValue() + "'.";
+                else if (message.getStatus() == KVMessage.StatusType.PUT_UPDATE)
+                    output = "Value updated successfully. Updated value is '" + message.getValue() + "'.";
+                else
+                    output = "Error Occured: " + message.getValue();
             } else if (inputMessage[0].compareToIgnoreCase("get") == 0) {
                 KVMessage message = objKVStoreClient.get(inputMessage[1]);
-                output = "---";
+                if (message.getStatus() == KVMessage.StatusType.GET_SUCCESS)
+                    output = "Stored value is " + message.getValue();
+                else
+                    output = "Error Occured: " + message.getValue();
             }
 
             logger.info(output);
