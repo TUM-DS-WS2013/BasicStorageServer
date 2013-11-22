@@ -47,39 +47,33 @@ public class ClientConnection implements Runnable {
             output = client_socket.getOutputStream();
             input = client_socket.getInputStream();
 
-            // Send connection acknowledgement
-            //String conn_ack = "Connected to server '" + client_socket.getLocalAddress() +
-            //                "' on port '" + client_socket.getLocalPort() + "'. You are '" +
-            //                client_socket.getInetAddress() + "'.";
-            //new NetworkMessage(conn_ack.getBytes()).writeTo(output);
-
             while (this.online) {
                 try {
                     // Receive client's query
                     NetworkMessage  netmsg = NetworkMessage.readFrom(input);
                     KVMessage       kvmsg, kvmsg_reply;
                     
+                    // Process query
                     try {
                         kvmsg = KVMessageRaw.unmarshal(netmsg.getData());
                         
-                        // Process query
                         logger.info("Received a '" + kvmsg.getStatus().name() + "' request from '" +
                                     client_socket.getInetAddress() + "' with {key='" + kvmsg.getKey() +
                                     "'; value='" + kvmsg.getValue() + "'}.");
                         
                         kvmsg_reply = this.parseKVMessage(kvmsg);
                         
-                        logger.info("Replying with '" + kvmsg_reply.getStatus().name() + "': {key='" +
-                                    kvmsg_reply.getKey() + "'; value='" + kvmsg_reply.getValue() + "'}.");
-                        
                     } catch (ParseException e) {
                         String report = "Warning! Received KVMessage is invalid: " + e.getMessage();
+                        
                         logger.warn(report);
-                        new NetworkMessage(report.getBytes()).writeTo(output);
-                        continue;
+                        kvmsg_reply = new KVMessageRaw(StatusType.PROTOCOL_ERROR, StatusType.PROTOCOL_ERROR.name(), report);
                     }
                     
                     // Send reply
+                    logger.info("Replying with '" + kvmsg_reply.getStatus().name() + "': {key='" +
+                                kvmsg_reply.getKey() + "'; value='" + kvmsg_reply.getValue() + "'}.");
+                    
                     netmsg = new NetworkMessage(KVMessageRaw.marshal(kvmsg_reply));
                     netmsg.writeTo(output);
                     

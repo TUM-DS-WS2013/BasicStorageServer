@@ -178,6 +178,7 @@ public class KVServer implements Runnable {
             
             BufferedReader  input_reader = new BufferedReader(new InputStreamReader(System.in));
             String          user_query;
+            
             while (server.online) {
                 System.out.print("> ");
                 user_query = input_reader.readLine().trim();
@@ -186,8 +187,22 @@ public class KVServer implements Runnable {
                     server.shutDown();
                 } else if (user_query.equalsIgnoreCase("dump")) {
                     System.out.println(server.data_storage.dump());
+                } else if (user_query.startsWith("log")) {
+                    String tokens[] = user_query.split("\\s+");
+                    if (tokens.length == 2 && LogSetup.isValidLevel(tokens[1])) {
+                        LogSetup.setLogLevel(tokens[1]);
+                    } else {
+                        System.out.println("Error! Bad command format: '" + user_query + "'.");
+                    }
+                } else if (user_query.equalsIgnoreCase("help")) {
+                    System.out.println("ACCEPTABLE COMMANDS:\n"
+                            + "    quit          - Stop server and quit application.\n"
+                            + "    dump          - Print the data stored on the server.\n"
+                            + "    log <level>   - Change the logging level to <level>.\n"
+                            + "    help          - Print this help text.");
                 } else if (!user_query.isEmpty()) {
-                    System.out.println("Error! Invalid command: '" + user_query + "'. Supported commands: dump, quit.");
+                    System.out.println("Error! Invalid command: '" + user_query + "'. "
+                            + "Type 'help' for list of supported commands.");
                 }
             }
             
@@ -196,14 +211,20 @@ public class KVServer implements Runnable {
         }
     }
     
+    /**
+     * Print help text
+     */
     private static void printUsage() {
         System.out.println(
                   "Usage: KVServer [-l log_level] <port>\n"
                 + "    -l log_level    - Set logging level (default: WARN).\n"
-                + "    port            - Port number for listening for connections."
+                + "    <port>          - Port number for listening for connections."
         );
     }
     
+    /**
+     * Private class responsible for command line arguments parsing
+     */
     private static class ArgumentParser {
         private final String                format;
         private final Map<String, Boolean>  optArgs;
@@ -211,6 +232,13 @@ public class KVServer implements Runnable {
         private final int                   count;
         private int                         offset;
         
+        /**
+         * Main constructor
+         * @param format String describing acceptable options (a simplified version
+         *              of POSIX "getopt()" format)
+         * @param args Array of command line arguments
+         * @throws ParseException Thrown if format has inconsistent syntax
+         */
         public ArgumentParser(String format, String[] args) throws ParseException {
             this.format = format;
             this.optArgs = new HashMap<String, Boolean>();
@@ -221,6 +249,10 @@ public class KVServer implements Runnable {
             this.parseFormat();
         }
         
+        /**
+         * Parses the format string and generates a map of valid options
+         * @throws ParseException Thrown if format has inconsistent syntax
+         */
         private void parseFormat() throws ParseException {
             Pattern syntax = Pattern.compile("([a-zA-Z0-9][:]?)*");
             
@@ -242,6 +274,15 @@ public class KVServer implements Runnable {
             }
         }
         
+        /**
+         * Reenterable function which parses command line arguments and return
+         *  next valid option.
+         * @return An `ArgumentParser.Option` instance containing the option and
+         *          its argument. Either name or argument of an option may be null
+         *          (parameterless option and positional argument, respectively).
+         * @throws ParseException Thrown if an invalid option is encountered or
+         *          if an option misses an argument
+         */
         public Option getNextArgument() throws ParseException {
             if (offset >= count) {
                 return null;
@@ -282,12 +323,18 @@ public class KVServer implements Runnable {
             return new Option(optName, optArgument);
         }
         
+        /**
+         * Restarts argument parsing from the first one
+         */
         public void reset() {
             this.offset = 0;
         }
         
+        /**
+         * A simple subclass for returning the option and its argument
+         */
         private class Option {
-            public final String   name;
+            public final String name;
             public final String argument;
             
             public Option(String name, String argument) {

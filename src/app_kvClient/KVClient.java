@@ -64,9 +64,9 @@ public class KVClient {
      * @return information String
      */
     public String ProcessMessages(String[] inputMessage) {
-        String output = new String();
+        String output = null;
         if (inputMessage.length < 1 || (objKVStoreClient == null && !inputMessage[0].equalsIgnoreCase("connect"))) {
-            return output = "Error: Connection not established!";
+            return "Error: Connection not established!";
         }
         try {
             if (inputMessage[0].compareToIgnoreCase("connect") == 0) {
@@ -86,31 +86,35 @@ public class KVClient {
             } else if (inputMessage[0].compareToIgnoreCase("put") == 0) {
                 KVMessage message = objKVStoreClient.put(inputMessage[1], inputMessage.length > 2 ? inputMessage[2]: null);
                 if (message.getStatus() == KVMessage.StatusType.DELETE_SUCCESS)
-                    output = "Deletion Succeeded: Value was '" + message.getValue() + "'.";
+                    output = "Deletion succeeded: Value was '" + message.getValue() + "'.";
                 else if (message.getStatus() == KVMessage.StatusType.PUT_SUCCESS)
                     output = "Value stored successfully. Value is '" + message.getValue() + "'.";
                 else if (message.getStatus() == KVMessage.StatusType.PUT_UPDATE)
                     output = "Value updated successfully. Updated value is '" + message.getValue() + "'.";
                 else
-                    output = "Error Occured: " + message.getValue();
+                    output = "Error occured: " + message.getValue();
             } else if (inputMessage[0].compareToIgnoreCase("get") == 0) {
                 KVMessage message = objKVStoreClient.get(inputMessage[1]);
                 if (message.getStatus() == KVMessage.StatusType.GET_SUCCESS)
-                    output = "Stored value is " + message.getValue();
+                    output = "Stored value is '" + message.getValue() + "'.";
                 else
-                    output = "Error Occured: " + message.getValue();
+                    output = "Error occured: " + message.getValue();
             }
 
             logger.info(output);
-        }catch (UnknownHostException hostException) {
-            output = "Error! See the log file for details";
-            logger.error(hostException.getMessage());
+        } catch (UnknownHostException hostException) {
+            output = "Error! Unable to connect to server: " + hostException.getMessage();
+            logger.error(output);
         } catch (IOException ioexception) {
-            output = "Error! See the log file for details";
-            logger.error(ioexception.getMessage());
+            output = "Error! Connection lost: " + ioexception.getMessage();
+            if (objKVStoreClient != null) {
+                objKVStoreClient.disconnect();
+                objKVStoreClient = null;
+            }
+            logger.error(output);
         } catch (Exception exception) {
-            output = "Error! See the log file for details";
-            logger.error(exception.getMessage());
+            output = "Error! Unknown exception: " + exception.getMessage();
+            logger.error(output);
         }
 
         return output;
