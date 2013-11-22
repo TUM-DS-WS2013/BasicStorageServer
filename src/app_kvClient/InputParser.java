@@ -91,7 +91,7 @@ public final class InputParser {
         // If command is not found print error message and return
         if (command == null) {
             System.out.println("Error! Command \"" + commandString + "\" is not"
-                    + " recognized. Type \"help\" go get list of acceptable"
+                    + " recognized. Type \"help\" to get list of acceptable"
                     + " commands.");
             return null;
         }
